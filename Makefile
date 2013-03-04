@@ -4,21 +4,24 @@ OPTIM := -O3
 
 COUNT := 22460
 
-COMPILE := $(CC) $(OPTIM)
+COMPILE := $(CC) $(OPTIM) -o $(BIN)/s
+COBJC=$(COMPILE).objc objc/*.m
+LMAC=-framework Foundation
+LLIN=`gnustep-config --objc-flags` -lgnustep-base
 
 vpath s.% $(BIN)
 
 build:
 	mkdir -p $(BIN)
-	$(COMPILE) -o $(BIN)/s.c c/*.c 
-	$(COMPILE) -o $(BIN)/s.cpp cpp/*.cpp -lstdc++
-	$(COMPILE) -o $(BIN)/s.objc objc/*.m -framework Foundation
+	$(COMPILE).c c/*.c
+	$(COMPILE).cpp cpp/*.cpp -lstdc++
+	if test `uname` = Darwin; then $(COBJC) $(LMAC); else $(COBJC) $(LLIN); fi
 
 time:
-	$(foreach v, $(wildcard $(BIN)/*), time $(v) $(COUNT);) 
+	$(foreach v, $(wildcard $(BIN)/*), time $(v) $(COUNT);)
 
 size:
-	$(foreach v, c cpp objc, echo $(v); cat $(v)/* | wc;) 
+	$(foreach v, c cpp objc, echo $(v); cat $(v)/* | wc;)
 
 clean:
 	rm -r $(BIN)
