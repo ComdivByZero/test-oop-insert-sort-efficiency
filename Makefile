@@ -7,7 +7,7 @@ COUNT := 22460
 COMPILE := $(CC) $(OPTIM) -o $(BIN)/s
 COBJC=$(COMPILE).objc objc/*.m
 LMAC=-framework Foundation
-LLIN=`gnustep-config --objc-flags` -lgnustep-base
+LLIN=`gnustep-config --objc-flags` -lobjc -lgnustep-base
 
 vpath s.% $(BIN)
 
