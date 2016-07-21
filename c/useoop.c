@@ -5,9 +5,13 @@
 #include <limits.h>
 
 
-typedef struct {
+typedef struct ElementRealization {
 	int x, y;
 } Point;
+
+struct ComparatorContextRealization {
+	Point p;
+};
 
 static Point** createArray(int cnt) {
 	Point *els;
@@ -25,34 +29,34 @@ static Point** createArray(int cnt) {
 	return arr;
 }
 
-static void printArray(Point* arr[], int cnt, Point *base) {
+static void printArray(Point* arr[], int cnt, ComparatorContext *base) {
 	int x, y;
 	int i;
 	for (i = 0; i < cnt; i++) {
-		x = arr[i]->x - base->x;
-		y = arr[i]->y - base->y;
+		x = arr[i]->x - base->p.x;
+		y = arr[i]->y - base->p.y;
 		printf("%02d) (%03d:%03d) : %d\n", i, arr[i]->x, arr[i]->y, x * x + y * y);
 	}
 }
 
-static int pointCompare(Point *ext, Point *a, Point *b) {
+static int pointCompare(ComparatorContext *ext, Point *a, Point *b) {
 	int ax, ay, bx, by;
-	ax = a->x - ext->x;
-	ay = a->y - ext->y;
-	bx = b->x - ext->x;
-	by = b->y - ext->y;
+	ax = a->x - ext->p.x;
+	ay = a->y - ext->p.y;
+	bx = b->x - ext->p.x;
+	by = b->y - ext->p.y;
 	return ax * ax + ay * ay - bx * bx - by * by;
 }
 
-static void pointCmpRelease(void *ext) {
+static void pointCmpRelease(ComparatorContext *ext) {
 	(void)ext;
 }
 
 int main(int argc, char const *argv[]) {
 	int cnt;
 	Point **points;
-	Comparator cmp;
-	Point *base;
+	Comparator *cmp;
+	ComparatorContext *base;
 	if (argc > 1) {
 		cnt = atoi(argv[1]);
 	} else {
@@ -61,17 +65,17 @@ int main(int argc, char const *argv[]) {
 	if (cnt > 0) {
 		points = createArray(cnt);
 		if (points != NULL) {
-			cmp = comparatorCreate(sizeof(Point), (void **)&base, (int (*)(void *ext, Element a, Element b))pointCompare, pointCmpRelease);
+			cmp = comparatorCreate(sizeof(ComparatorContext), &base, pointCompare, pointCmpRelease);
 			if (cmp != NULL) {
-				base->x = 1;
-				base->y = 2;
+				base->p.x = 1;
+				base->p.y = 2;
 				if (cnt < 20) {
 					printArray(points, cnt, base);
 					printf("\n");
-					oopSort((Element *)points, cnt, cmp);
+					oopSort(points, cnt, cmp);
 					printArray(points, cnt, base);
 				} else {
-					oopSort((Element *)points, cnt, cmp);
+					oopSort(points, cnt, cmp);
 				}
 				comparatorRelease(&cmp);
 			}

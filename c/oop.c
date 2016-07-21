@@ -4,44 +4,44 @@
 #include <stdio.h>
 #include <limits.h>
 
-typedef struct {
-	int (*compare)(void *ext, Element a, Element b);
-	void (*release)(void *ext);
-	void *ext;
-} RComparator;
+struct ComparatorClosedRealization {
+	int (*compare)(ComparatorContext *ext, Element *a, Element *b);
+	void (*release)(ComparatorContext *ext);
+	ComparatorContext *ext;
+};
 
-extern Comparator comparatorCreate(int extSize, void **ext, 
-					int (*compare)(void *ext, Element a, Element b),
-					void (*release)(void *ext)) {
+extern Comparator* comparatorCreate(int extSize, ComparatorContext **ext, 
+					int compare(ComparatorContext *ext, Element *a, Element *b),
+					void release(ComparatorContext *ext)) {
 
-	RComparator *cmp;
-	cmp = (RComparator *)malloc(sizeof(RComparator) - sizeof(void *) + extSize);
+	Comparator *cmp;
+	cmp = (Comparator *)malloc(sizeof(Comparator) + extSize);
 	if (cmp != NULL) {
 		cmp->compare = compare;
 		cmp->release = release;
-		*ext = (void *)&cmp->ext;
+		*ext = (ComparatorContext *)(cmp + 1);
+		cmp->ext = *ext;
 	}
-	return (Comparator)cmp;
+	return cmp;
 }
 
-extern int compare(Comparator cmp, Element a, Element b) {
-	return ((RComparator *)cmp)->compare((void *)&((RComparator *)cmp)->ext, a, b);
+extern int compare(Comparator *cmp, Element *a, Element *b) {
+	return cmp->compare(cmp->ext, a, b);
 }
 
-extern void comparatorRelease(Comparator *cmp) {
-	RComparator *rc = (RComparator *)*cmp;
-	if (rc != NULL) {
-		rc->release((void *)&rc->ext);
-		free(rc);
+extern void comparatorRelease(Comparator **cmp) {
+	if (*cmp != NULL) {
+		(*cmp)->release(cmp->ext);
+		free(*cmp);
 		*cmp = NULL;
 	}
 }
 
-extern void oopSort(Element arr[], int cnt, Comparator cmp) {
+extern void oopSort(Element *arr[], int cnt, Comparator *cmp) {
 	int i, j;
-	Element a;
-	int (*compare)(void *ext, Element a, Element b) = ((RComparator *)cmp)->compare;
-	void *ext = (void *)&((RComparator *)cmp)->ext;
+	Element *a;
+	int (*compare)(ComparatorContext *ext, Element *a, Element *b) = cmp->compare;
+	ComparatorContext *ext = cmp->ext;
 	for (i = 1; i < cnt; i++) {
 		a = arr[i];
 		j = i - 1;
@@ -50,5 +50,5 @@ extern void oopSort(Element arr[], int cnt, Comparator cmp) {
 			j--;
 		}
 		arr[j + 1] = a;
-	} 
+	}
 }
