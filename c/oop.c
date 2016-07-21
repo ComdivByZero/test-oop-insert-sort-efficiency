@@ -31,7 +31,7 @@ extern int compare(Comparator *cmp, Element *a, Element *b) {
 
 extern void comparatorRelease(Comparator **cmp) {
 	if (*cmp != NULL) {
-		(*cmp)->release(cmp->ext);
+		(*cmp)->release((*cmp)->ext);
 		free(*cmp);
 		*cmp = NULL;
 	}
